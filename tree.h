@@ -1,7 +1,3 @@
-//
-// Created by suro on 2020-11-06.
-//
-
 #ifndef RTREE_TREE_H
 #define RTREE_TREE_H
 
@@ -17,7 +13,7 @@ using namespace std;
 class RangeTree;
 
 struct Record{
-    int coor[2];
+    vector<int> coor;
     string des;
 };
 
@@ -27,6 +23,7 @@ struct Node{
     Node* children[2];
     Node* parent;
     RangeTree* rangeTree;
+    int max_leaf;
     
     Node(Record record, vector<Node*>::iterator itr){
         this->itr = itr;
@@ -35,6 +32,7 @@ struct Node{
         this->children[1] = 0;
         this->parent = 0;
         this->rangeTree = 0;
+        this->max_leaf = 0;
     }
 };
 
@@ -52,6 +50,7 @@ private:
             Node* parent = new Node(records[l]->record, records.end());
             Node* child1 = records[l];
             parent->children[0] = child1;
+            parent->max_leaf = child1->record.coor[cur_dim];
             child1->parent = parent;
 
             if(cur_dim+1 == max_dim) return parent;
@@ -66,11 +65,12 @@ private:
         if(l+1 == r){
             Node* child1 = records[l];
             Node* child2 = records[r];
-            int coor[2] = {0,0};
-            coor[cur_dim] = (child1->record.coor[cur_dim] + child2->record.coor[cur_dim])/2;
-            Node* parent = new Node({coor[0],coor[1],""}, records.end());
+            vector<int> coor(max_dim);
+            coor[cur_dim] = child1->record.coor[cur_dim];
+            Node* parent = new Node({coor,""}, records.end());
             parent->children[0] = child1;
             parent->children[1] = child2;
+            parent->max_leaf = child2->record.coor[cur_dim];
             child1->parent = parent;
             child2->parent = parent;
 
@@ -86,11 +86,12 @@ private:
         int m = (l+r)/2;
         Node* child1 = create_RangeTree(l, m);
         Node* child2 = create_RangeTree(m+1, r);
-        int coor[2] = {0,0};
-        coor[cur_dim] = (child1->record.coor[cur_dim] + child2->record.coor[cur_dim])/2;
-        Node* parent = new Node({coor[0],coor[1],""}, records.end());
+        vector<int> coor(max_dim);
+        coor[cur_dim] = child1->max_leaf;
+        Node* parent = new Node({coor,""}, records.end());
         parent->children[0] = child1;
         parent->children[1] = child2;
+        parent->max_leaf = child2->max_leaf;
         child1->parent = parent;
         child2->parent = parent;
 
@@ -142,13 +143,19 @@ public:
         for(int i=0; i<ranges.size(); i++){
 
             while(tmp->children[0]){
+                /*int c = tmp->record.coor[i];
+                int r_left = ranges[i].first;
+                if (r_left <= c)
+                    tmp = tmp->children[0];
+                else
+                    tmp = tmp->children[1];*/
                 tmp = tmp->children[(ranges[i].first>tmp->record.coor[i])];
             }
 
             auto itr = tmp->itr;
 
             if(i < ranges.size()-1) {
-                while(itr != rt->records.end() and (*itr)->record.coor[i] < ranges[i].second) {
+                while((itr+1) != rt->records.end() and (*(itr+1))->record.coor[i] <= ranges[i].second) {
                     itr++;
                 }
 
@@ -162,6 +169,7 @@ public:
                 tmp = rt->root;
             } else {
                 while(itr!=rt->records.end() and (*itr)->record.coor[i] <= ranges[i].second) {
+                    //TODO validar records
                     rs.push_back((*itr)->record);
                     itr++;
                 }
