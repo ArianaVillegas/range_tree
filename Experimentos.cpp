@@ -12,6 +12,15 @@ bool in_range(int p, int B, int E) {
     return (B <= p && p <= E);
 }
 
+vector<Record> range_query_lineal (vector<Record>& data, vector<pair<int,int>> ranges) {
+    vector<Record> res;
+    for (auto& r : data) {
+        if (in_range(r.coor[0], ranges[0].first, ranges[0].second) && in_range(r.coor[1], ranges[1].first, ranges[1].second))
+            res.push_back(r);
+    }
+    return res;
+}
+
 void test(RangeTree& rt, int n, vector<Record>& data) {
     int Bx = rand() % X_MAX;
     int Ex = Bx + n;
@@ -23,7 +32,12 @@ void test(RangeTree& rt, int n, vector<Record>& data) {
     t2 = chrono::high_resolution_clock::now();
 
     cout << "\nTamanio de rango de prueba: " << n << endl;
-    cout << "Tiempo de consulta: " << chrono::duration_cast<chrono::duration<double>>(t2 - t1).count() << " segundos\n";
+    cout << "Tiempo de consulta por rango: " << chrono::duration_cast<chrono::duration<double>>(t2 - t1).count() << " segundos\n";
+
+    t1 = chrono::high_resolution_clock::now();
+    auto tmp = range_query_lineal(data, {{Bx, Ex}, {By, Ey}});
+    t2 = chrono::high_resolution_clock::now();
+    cout << "Tiempo de consulta lineal: " << chrono::duration_cast<chrono::duration<double>>(t2 - t1).count() << " segundos\n";
 
     bool correct = true;
     for (auto& p : q) {
