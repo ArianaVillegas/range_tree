@@ -22,40 +22,42 @@ vector<Record> range_query_lineal (vector<Record>& data, vector<pair<int,int>> r
 }
 
 void test(RangeTree& rt, int n, vector<Record>& data) {
-    int Bx = rand() % X_MAX;
-    int Ex = Bx + n;
-    int By = rand() % Y_MAX;
-    int Ey = By + n;
+    double t_range = 0, t_lineal = 0;
+    int i = 0;
+    bool verify = true;
+    cout << "Haciendo " << n << " consultas...\n";
+    while (i++ < n) {
+        int Bx = rand() % X_MAX;
+        int Ex = Bx + (rand() % X_MAX);
+        int By = rand() % Y_MAX;
+        int Ey = By + (rand() % Y_MAX);
 
-    chrono::high_resolution_clock::time_point t2, t1 = chrono::high_resolution_clock::now();
-    auto q = rt.range_query({{Bx, Ex}, {By, Ey}});
-    t2 = chrono::high_resolution_clock::now();
+        chrono::high_resolution_clock::time_point t2, t1 = chrono::high_resolution_clock::now();
+        auto q = rt.range_query({{Bx, Ex}, {By, Ey}});
+        t2 = chrono::high_resolution_clock::now();
+        t_range += chrono::duration_cast<chrono::duration<double>>(t2 - t1).count();
 
-    cout << "\nTamanio de rango de prueba: " << n << endl;
-    cout << "Tiempo de consulta por rango: " << chrono::duration_cast<chrono::duration<double>>(t2 - t1).count() << " segundos\n";
+        t1 = chrono::high_resolution_clock::now();
+        auto tmp = range_query_lineal(data, {{Bx, Ex}, {By, Ey}});
+        t2 = chrono::high_resolution_clock::now();
+        t_lineal += chrono::duration_cast<chrono::duration<double>>(t2 - t1).count();
 
-    t1 = chrono::high_resolution_clock::now();
-    auto tmp = range_query_lineal(data, {{Bx, Ex}, {By, Ey}});
-    t2 = chrono::high_resolution_clock::now();
-    cout << "Tiempo de consulta lineal: " << chrono::duration_cast<chrono::duration<double>>(t2 - t1).count() << " segundos\n";
-
-    bool correct = true;
-    for (auto& p : q) {
-        if (!in_range(p.coor[0], Bx, Ex) || !in_range(p.coor[1], By, Ey)) {
-            correct = false;
-            break;
+        bool correct = true;
+        for (auto &p : q) {
+            if (!in_range(p.coor[0], Bx, Ex) || !in_range(p.coor[1], By, Ey)) {
+                correct = false;
+                break;
+            }
         }
-    }
-    if (correct) cout << "Resultado SI esta dentro del rango!!!\n";
-    else cout << "X Resultado NO esta dentro del rango X\n";
 
-    int count = 0;
-    for (auto& p : data) {
-        if (in_range(p.coor[0], Bx, Ex) && in_range(p.coor[1], By, Ey)) count++;
-    }
-    cout << "Cantidad de puntos en el rango: " << count;
-    cout << "\nCantidad de puntos obtenidos: " << q.size() << endl;
+        verify = verify && correct;
 
+        if (!correct || tmp.size() != q.size())
+            cout << "Consulta " << i+1 << " no es correcta\n";
+    }
+    cout << "Tiempo promedio busqueda por rango: " << t_range/n << " segundos" << endl;
+    cout << "Tiempo promedio busqueda lineal: " << t_lineal/n << " segundos" << endl;
+    if (verify) cout << "Todas las consultas son correctas!!!\n\n";
 }
 
 int main() {
