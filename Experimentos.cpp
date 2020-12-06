@@ -28,9 +28,9 @@ void test(RangeTree& rt, int n, vector<Record>& data) {
     cout << "Haciendo " << n << " consultas...\n";
     while (i++ < n) {
         int Bx = rand() % X_MAX;
-        int Ex = Bx + (rand() % X_MAX);
+        int Ex = Bx + (rand() % (X_MAX/2));
         int By = rand() % Y_MAX;
-        int Ey = By + (rand() % Y_MAX);
+        int Ey = By + (rand() % (Y_MAX/2));
 
         chrono::high_resolution_clock::time_point t2, t1 = chrono::high_resolution_clock::now();
         auto q = rt.range_query({{Bx, Ex}, {By, Ey}});
